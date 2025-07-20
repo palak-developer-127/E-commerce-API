@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🛒 My Cart</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    #cartItems {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .item {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: 0.3s;
+    }
+
+    .item:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .item h3 {
+      margin-top: 0;
+    }
+
+    .item p {
+      margin: 6px 0;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    input[type="text"] {
+      width: 300px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    hr {
+      margin: 40px 0 20px;
+      border: none;
+      height: 1px;
+      background-color: #ccc;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🛒 My Cart</h1>
+  <div id="cartItems"></div>
+
+  <hr>
+
+  <h2>Place Order</h2>
+  <div style="text-align:center;">
+    <input type="text" id="address" placeholder="Enter delivery address" required><br>
+    <input type="text" id="phone" placeholder="Enter phone number" required><br>
+    <button onclick="placeOrder()"> Place Order</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const API = 'http://localhost:5000/api/cart';
+
+    async function loadCart() {
+      const res = await fetch(API + '/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      const container = document.getElementById('cartItems');
+      container.innerHTML = '';
+
+      if (!data.items || data.items.length === 0) {
+        container.innerHTML = '<p>Your cart is empty.</p>';
+        return;
+      }
+
+      data.items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <h3>${item.productId.name}</h3>
+          <p>Price: ₹${item.productId.price}</p>
+          <p>Quantity: 
+            <input type="number" min="1" value="${item.quantity}" id="qty-${item.productId._id}">
+            <button onclick="updateItem('${item.productId._id}')">Update</button>
+            <button onclick="deleteItem('${item.productId._id}')">Delete</button>
+          </p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function updateItem(productId) {
+      const quantity = parseInt(document.getElementById(`qty-${productId}`).value);
+      const res = await fetch(API + '/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId, quantity })
+      });
+      const data = await res.json();
+      alert(data.msg);
+      loadCart();
+    }
+
+    async function deleteItem(productId) {
+      const res = await fetch(API + '/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId })
+      });
+      const data = await res.json();
+      alert(data.msg);
+      loadCart();
+    }
+
+    async function placeOrder() {
+      const address = document.getElementById('address').value;
+      const phone = document.getElementById('phone').value;
+
+      const res = await fetch(API + '/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ address, phone })
+      });
+
+      const data = await res.json();
+      alert(data.msg);
+      if (data.orderId) {
+        localStorage.removeItem('cart');
+        window.location.href = 'success.html';
+      }
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

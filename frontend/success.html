@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Success</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; text-align: center; }
+    h1 { color: green; }
+    .info { margin-top: 20px; }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1> Order Successful!</h1>
+  <div class="info" id="orderDetails"></div>
+  <button onclick="goHome()">Go to Home</button>
+
+  <script>
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    const data = JSON.parse(localStorage.getItem('buyNowOrder'));
+    if (data) {
+      document.getElementById('orderDetails').innerHTML = `
+        <p><strong>Product:</strong> ${data.name}</p>
+        <p><strong>Price:</strong> ₹${data.price}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Address:</strong> ${data.address}</p>
+      `;
+      localStorage.removeItem('buyNowOrder');
+    }
+  </script>
+</body>
+</html>

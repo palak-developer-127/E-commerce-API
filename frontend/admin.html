@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Admin Product Management</h2>
+
+  <h3>Add New Product</h3>
+  <input type="text" id="name" placeholder="Product Name">
+  <input type="text" id="description" placeholder="Description">
+  <input type="number" id="price" placeholder="Price">
+  <input type="text" id="image" placeholder="Image URL">
+  <button onclick="addProduct()">Add Product</button>
+
+  <hr>
+
+  <h3>Search Products</h3>
+  <input type="text" id="searchBox" placeholder="Search by name..." oninput="fetchProducts()" />
+
+  <h3>All Products</h3>
+  <table id="productTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+    </tbody>
+  </table>
+
+  <script>
+    const token = localStorage.getItem("token"); 
+    const userRole = localStorage.getItem("userRole");
+
+    if (!token || userRole !== "admin") {
+      alert("Access Denied: Admins Only!");
+      window.location.href = "index.html";
+    }
+
+    async function fetchProducts() {
+  const search = document.getElementById('searchBox').value;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/products?search=${search}&limit=100`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    const tbody = document.querySelector('#productTable tbody');
+    tbody.innerHTML = '';
+
+    if (!data.products || data.products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3">No products found</td></tr>`;
+      return;
+    }
+
+    data.products.forEach(p => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${p.name}</td>
+        <td>${p.price}</td>
+        <td>
+          <button onclick="deleteProduct('${p._id}')">🗑 Delete</button>
+          <button onclick="editProduct('${p._id}', '${p.name}', '${p.description}', ${p.price}, '${p.image}')">✏️ Edit</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    alert("Error fetching products.");
+    console.error(err);
+  }
+}
+
+
+    async function addProduct() {
+      const name = document.getElementById("name").value;
+      const description = document.getElementById("description").value;
+      const price = document.getElementById("price").value;
+      const image = document.getElementById("image").value;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/products", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+          body: JSON.stringify({ name, description, price, image })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert(" Product Added");
+          fetchProducts();
+        } else {
+          alert(" " + data.message);
+        }
+      } catch (err) {
+        alert(" Add failed");
+      }
+    }
+
+    async function deleteProduct(id) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        if (res.ok) {
+          alert("🗑 Deleted Successfully");
+          fetchProducts();
+        } else {
+          alert(" Failed to delete");
+        }
+      } catch (err) {
+        alert(" Error deleting product");
+      }
+    }
+
+    function editProduct(id, name, description, price, image) {
+      const newName = prompt("Edit Name:", name);
+      const newDesc = prompt("Edit Description:", description);
+      const newPrice = prompt("Edit Price:", price);
+      const newImage = prompt("Edit Image URL:", image);
+
+      if (newName && newPrice) {
+        updateProduct(id, newName, newDesc, newPrice, newImage);
+      }
+    }
+
+    async function updateProduct(id, name, description, price, image) {
+      try {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+          body: JSON.stringify({ name, description, price, image })
+        });
+
+        if (res.ok) {
+          alert(" Product Updated");
+          fetchProducts();
+        } else {
+          alert(" Failed to update");
+        }
+      } catch (err) {
+        alert(" Update failed");
+      }
+    }
+
+    
+    fetchProducts();
+  </script>
+</body>
+</html>

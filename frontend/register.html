@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <style>
+    
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #2c3e50;
+      padding: 10px 20px;
+      color: white;
+    }
+    .navbar .logo {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .navbar .nav-links a {
+      margin-left: 20px;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .navbar .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .register-container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      margin: 80px auto;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #27ae60;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #navLogout {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="logo">🛍️ ShopEase</div>
+    <div class="nav-links">
+      <a href="register.html">Register</a>
+      <a href="login.html">Login</a>
+      <a href="javascript:void(0)" id="navLogout" onclick="logout()">Logout</a>
+    </div>
+  </div>
+
+  <div class="register-container">
+    <h2>Register New User</h2>
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+
+    
+<select id="role">
+  <option value="customer">Customer</option>
+  <option value="admin">Admin</option>
+</select>
+
+
+    <button onclick="register()">Register</button>
+  </div>
+
+  <script>
+    
+async function register() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const role = document.getElementById("role").value; 
+
+  const res = await fetch("http://localhost:5000/api/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name, email, password, role }) 
+  });
+
+  const data = await res.json();
+  alert(data.msg);
+}
+
+
+    function logout() {
+      localStorage.removeItem("token");
+      alert("Logged out!");
+      window.location.href = "login.html";
+    }
+
+    window.onload = () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        document.getElementById("navLogout").style.display = "inline";
+      }
+    };
+  </script>
+
+</body>
+</html>
